@@ -8,7 +8,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- עיצוב CSS (יישור לימין + תיקון רשימות) ---
+# --- עיצוב CSS ---
 st.markdown("""
 <style>
     /* כיוון כללי */
@@ -17,19 +17,18 @@ st.markdown("""
         text-align: right;
     }
     
-    /* יישור טקסטים רגילים */
+    /* יישור טקסטים */
     p, div, h1, h2, h3, h4, h5, h6, span {
         text-align: right !important;
         direction: rtl !important;
     }
     
-    /* --- התיקון הגדול לרשימות --- */
-    /* מוודא שהמספרים והנקודות בצד ימין */
+    /* יישור רשימות */
     ul, ol {
         direction: rtl !important;
         text-align: right !important;
-        margin-right: 1.5rem !important; /* רווח ליד המספרים בצד ימין */
-        margin-left: 0 !important;       /* ביטול הרווח השמאלי */
+        margin-right: 1.5rem !important;
+        margin-left: 0 !important;
         padding-right: 0 !important;
     }
     
@@ -38,7 +37,7 @@ st.markdown("""
         direction: rtl !important;
     }
     
-    /* בועות הצ'אט עצמן */
+    /* בועות הצ'אט */
     .stChatMessage {
         direction: rtl !important;
         text-align: right !important;
@@ -66,7 +65,7 @@ else:
     st.error("חסר מפתח API. נא להגדיר אותו ב-Streamlit Secrets.")
     st.stop()
 
-# --- הפרומפט המלא ---
+# --- הפרומפט המלא (עם חסימת מחשבות) ---
 SYSTEM_PROMPT = """
 **אזהרה אתית קלינית (חובה פנימית):** הנח כי כל משתמש עלול להיות רגיש להפרעות אכילה (ED). עקרון העל שלך הוא **Primum Non Nocere (קודם כל, אל תגרום נזק)**. אתה פועל תחת סביבת סיכון גבוהה.
 
@@ -130,6 +129,10 @@ SYSTEM_PROMPT = """
 ### 8. 🚨 ניהול משברים (Crisis Protocol)
 * **סיכון מיידי:** אם מזוהה סיכון (אובדנות, פגיעה עצמית, צום, כאב פיזי חריג) -> **הפסקת דיון תזונתי** ומתן מספרי חירום/הפניה לרופא.
 * **ניהול נפילות:** טיפול בנפילה **רק בדיווח יזום**. קבלה כחלק מהתהליך, ללא שיפוטיות.
+
+### 🛑 הנחיה טכנית קריטית (Output Control) - לא למשתמש!
+**אסור בתכלית האיסור** להציג למשתמש את תהליך החשיבה הפנימי שלך (טקסטים שמתחילים ב-"Thinking:", "Plan:", "Self-correction").
+הפלט שלך חייב להכיל **רק** את התשובה הסופית למשתמש בשפה טבעית וחמה. שמור את הניתוחים והאזהרות לעצמך ולעיבוד הפנימי בלבד.
 """
 
 # --- אתחול המודל והזיכרון ---
