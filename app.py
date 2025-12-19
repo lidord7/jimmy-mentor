@@ -16,7 +16,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- כותרת מעודכנת ---
+# --- כותרת ---
 st.title("🥗 ג'ימי - יועץ התזונה שלך")
 st.caption("כאן בשביל הכושר, האוכל והנפש שלך.")
 
@@ -97,12 +97,11 @@ SYSTEM_PROMPT = """
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# בחירת המודל - תיקון קריטי
-# שימוש בשם המודל הספציפי 001 שהוא הכי יציב כרגע
+# בחירת המודל - משתמשים במודל הקלאסי והיציב
 if "chat_session" not in st.session_state:
     try:
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash-001",
+            model_name="gemini-pro",
             system_instruction=SYSTEM_PROMPT
         )
         st.session_state.chat_session = model.start_chat(history=[])
