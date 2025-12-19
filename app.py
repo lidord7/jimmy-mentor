@@ -16,7 +16,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- כותרת (השינוי שביקשת) ---
+# --- כותרת מעודכנת ---
 st.title("🥗 ג'ימי - יועץ התזונה שלך")
 st.caption("כאן בשביל הכושר, האוכל והנפש שלך.")
 
@@ -97,14 +97,17 @@ SYSTEM_PROMPT = """
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# בחירת המודל - תיקון גרסה
-# שינינו כאן לגרסה שתמיד עובדת
+# בחירת המודל - תיקון קריטי
+# שימוש בשם המודל הספציפי 001 שהוא הכי יציב כרגע
 if "chat_session" not in st.session_state:
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash-latest",
-        system_instruction=SYSTEM_PROMPT
-    )
-    st.session_state.chat_session = model.start_chat(history=[])
+    try:
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash-001",
+            system_instruction=SYSTEM_PROMPT
+        )
+        st.session_state.chat_session = model.start_chat(history=[])
+    except Exception as e:
+        st.error(f"שגיאה בטעינת המודל: {e}")
 
 # --- הצגת היסטוריית הצ'אט ---
 for message in st.session_state.messages:
@@ -118,14 +121,17 @@ if prompt := st.chat_input("כתוב לג'ימי..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     # 2. שליחה לג'ימי וקבלת תשובה
-    try:
-        response = st.session_state.chat_session.send_message(prompt)
-        
-        # 3. הצגת התשובה של ג'ימי
-        with st.chat_message("assistant"):
-            st.markdown(response.text)
-        
-        st.session_state.messages.append({"role": "assistant", "content": response.text})
-        
-    except Exception as e:
-        st.error(f"אופס, קרתה שגיאה: {e}")
+    if "chat_session" in st.session_state:
+        try:
+            response = st.session_state.chat_session.send_message(prompt)
+            
+            # 3. הצגת התשובה של ג'ימי
+            with st.chat_message("assistant"):
+                st.markdown(response.text)
+            
+            st.session_state.messages.append({"role": "assistant", "content": response.text})
+            
+        except Exception as e:
+            st.error(f"אופס, קרתה שגיאה: {e}")
+    else:
+        st.error("הצ'אט לא אותחל כראוי. נסה לרענן את הדף.")
