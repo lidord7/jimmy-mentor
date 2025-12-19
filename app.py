@@ -8,36 +8,35 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- עיצוב CSS (יישור לימין + כיוון RTL) ---
+# --- עיצוב CSS (יישור לימין חזק) ---
 st.markdown("""
 <style>
-    /* הופך את כל האפליקציה לכתיבה מימין לשמאל */
+    /* כיוון כללי לכל האפליקציה */
     .stApp {
         direction: rtl;
         text-align: right;
     }
     
-    /* מסדר את שורת הכתיבה למטה */
-    .stChatInput {
-        position: fixed; 
-        bottom: 0; 
-        padding-bottom: 20px;
+    /* יישור לימין של כל הטקסטים (כולל הודעות הבוט) */
+    .stMarkdown, p, div {
+        text-align: right !important;
+        direction: rtl !important;
     }
     
-    /* מוודא שהטקסט בתוך שורת הכתיבה גם מימין לשמאל */
-    .stChatInput textarea {
+    /* סידור הכותרות */
+    h1, h2, h3 {
+        text-align: right !important;
+    }
+    
+    /* סידור שורת הכתיבה למטה */
+    .stChatInput {
         direction: rtl;
         text-align: right;
     }
-
-    /* רווח תחתון כדי שהצ'אט לא יוסתר */
-    .block-container {
-        padding-top: 1rem; 
-        padding-bottom: 5rem;
-    }
     
-    /* תיקון קטן לכותרות */
-    h1, h2, h3 {
+    /* וידוא שהטקסט בתוך שורת הכתיבה מימין לשמאל */
+    .stChatInput textarea {
+        direction: rtl;
         text-align: right;
     }
 </style>
@@ -45,8 +44,7 @@ st.markdown("""
 
 # --- כותרת ---
 st.title("🥗 ג'ימי - יועץ התזונה שלך")
-st.caption("עושים סדר בתזונה ובבריאות – פשוט, טעים ובלי שיפוטיות.") 
-# רוצה לשנות את הטקסט למעלה? פשוט ערוך את מה שכתוב בתוך הגרשיים
+st.caption("עושים סדר בתזונה ובבריאות – פשוט, טעים ובלי שיפוטיות.")
 
 # --- הגדרת המפתח ---
 if "GOOGLE_API_KEY" in st.secrets:
@@ -125,7 +123,7 @@ SYSTEM_PROMPT = """
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# בחירת המודל - גרסת 2.5
+# בחירת המודל (gemini-2.5-flash)
 if "chat_session" not in st.session_state:
     try:
         model = genai.GenerativeModel(
