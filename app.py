@@ -8,17 +8,45 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- עיצוב CSS ---
+# --- עיצוב CSS (יישור לימין + כיוון RTL) ---
 st.markdown("""
 <style>
-    .stChatInput {position: fixed; bottom: 0; padding-bottom: 20px;}
-    .block-container {padding-top: 1rem; padding-bottom: 5rem;}
+    /* הופך את כל האפליקציה לכתיבה מימין לשמאל */
+    .stApp {
+        direction: rtl;
+        text-align: right;
+    }
+    
+    /* מסדר את שורת הכתיבה למטה */
+    .stChatInput {
+        position: fixed; 
+        bottom: 0; 
+        padding-bottom: 20px;
+    }
+    
+    /* מוודא שהטקסט בתוך שורת הכתיבה גם מימין לשמאל */
+    .stChatInput textarea {
+        direction: rtl;
+        text-align: right;
+    }
+
+    /* רווח תחתון כדי שהצ'אט לא יוסתר */
+    .block-container {
+        padding-top: 1rem; 
+        padding-bottom: 5rem;
+    }
+    
+    /* תיקון קטן לכותרות */
+    h1, h2, h3 {
+        text-align: right;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- כותרת ---
 st.title("🥗 ג'ימי - יועץ התזונה שלך")
-st.caption("כאן בשביל הכושר, האוכל והנפש שלך. (מופעל ע\"י Gemini 2.5)")
+st.caption("עושים סדר בתזונה ובבריאות – פשוט, טעים ובלי שיפוטיות.") 
+# רוצה לשנות את הטקסט למעלה? פשוט ערוך את מה שכתוב בתוך הגרשיים
 
 # --- הגדרת המפתח ---
 if "GOOGLE_API_KEY" in st.secrets:
@@ -97,7 +125,7 @@ SYSTEM_PROMPT = """
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# בחירת המודל - שימוש בגרסה החזקה ביותר שמצאנו אצלך
+# בחירת המודל - גרסת 2.5
 if "chat_session" not in st.session_state:
     try:
         model = genai.GenerativeModel(
