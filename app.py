@@ -8,33 +8,46 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- עיצוב CSS (יישור לימין חזק) ---
+# --- עיצוב CSS (יישור לימין + תיקון רשימות) ---
 st.markdown("""
 <style>
-    /* כיוון כללי לכל האפליקציה */
+    /* כיוון כללי */
     .stApp {
         direction: rtl;
         text-align: right;
     }
     
-    /* יישור לימין של כל הטקסטים (כולל הודעות הבוט) */
-    .stMarkdown, p, div {
+    /* יישור טקסטים רגילים */
+    p, div, h1, h2, h3, h4, h5, h6, span {
         text-align: right !important;
         direction: rtl !important;
     }
     
-    /* סידור הכותרות */
-    h1, h2, h3 {
+    /* --- התיקון הגדול לרשימות --- */
+    /* מוודא שהמספרים והנקודות בצד ימין */
+    ul, ol {
+        direction: rtl !important;
+        text-align: right !important;
+        margin-right: 1.5rem !important; /* רווח ליד המספרים בצד ימין */
+        margin-left: 0 !important;       /* ביטול הרווח השמאלי */
+        padding-right: 0 !important;
+    }
+    
+    li {
+        text-align: right !important;
+        direction: rtl !important;
+    }
+    
+    /* בועות הצ'אט עצמן */
+    .stChatMessage {
+        direction: rtl !important;
         text-align: right !important;
     }
     
-    /* סידור שורת הכתיבה למטה */
+    /* שורת הכתיבה */
     .stChatInput {
         direction: rtl;
-        text-align: right;
     }
-    
-    /* וידוא שהטקסט בתוך שורת הכתיבה מימין לשמאל */
     .stChatInput textarea {
         direction: rtl;
         text-align: right;
