@@ -11,16 +11,42 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- עיצוב CSS ---
+# --- עיצוב CSS מתוקן למובייל (Mobile Friendly) ---
 st.markdown("""
 <style>
-    .stApp { direction: rtl; text-align: right; }
-    p, div, h1, h2, h3, h4, h5, h6, span { text-align: right !important; direction: rtl !important; }
-    ul, ol { direction: rtl !important; text-align: right !important; margin-right: 1.5rem !important; }
-    li { text-align: right !important; direction: rtl !important; }
-    .stChatMessage { direction: rtl !important; text-align: right !important; }
-    .stChatInput { direction: rtl; }
-    .stChatInput textarea { direction: rtl; text-align: right; }
+    /* במקום להפוך את כל האתר, אנחנו מיישרים רק את הטקסט */
+    .stApp {
+        text-align: right;
+    }
+    
+    /* כיוון טקסטים לאלמנטים ספציפיים בלבד */
+    h1, h2, h3, h4, h5, h6, p, div, span {
+        direction: rtl;
+    }
+
+    /* תיקון ספציפי להודעות צ'אט */
+    .stChatMessage {
+        direction: rtl;
+        text-align: right;
+    }
+    
+    /* תיקון לרשימות */
+    ul, ol {
+        direction: rtl;
+        margin-right: 1.5rem;
+    }
+    
+    /* תיקון לשדות קלט (Input) */
+    .stTextInput input, .stChatInput textarea {
+        direction: rtl;
+        text-align: right;
+    }
+    
+    /* מוודא שהסרגל צד לא נמעך במובייל */
+    [data-testid="stSidebar"] {
+        text-align: right;
+        direction: rtl;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -43,7 +69,6 @@ def connect_to_sheets():
             client = gspread.authorize(creds)
             return client.open("data base Jimmy").sheet1
         except Exception as e:
-            st.error(f"שגיאה בחיבור לכספת: {e}")
             return None
 
     # ניסיון 2: קריאה מקובץ מקומי (עבור המחשב בבית)
@@ -57,7 +82,7 @@ def connect_to_sheets():
 sheet = connect_to_sheets()
 
 if not sheet:
-    st.error("שגיאה: לא הצלחתי להתחבר לנתונים. אם אתה בענן - בדוק את ה-Secrets. אם אתה במחשב - בדוק את credentials.json.")
+    st.error("שגיאה: לא הצלחתי להתחבר לנתונים. אם אתה בענן - בדוק את ה-Secrets.")
     st.stop()
 
 # --- זיהוי משתמש ---
@@ -72,7 +97,6 @@ def get_memory(user_name):
         all_rows = sheet.get_all_records()
         memory_string = ""
         relevant_rows = [row for row in all_rows if row.get('User_Name') == user_name]
-        # לוקח את 30 ההודעות האחרונות
         for row in relevant_rows[-30:]:
             role = row.get('Role')
             msg = row.get('Message')
@@ -83,7 +107,6 @@ def get_memory(user_name):
         return ""
 
 # --- חיבור ל-Gemini ---
-# מנסה למשוך מ-Secrets, אם לא קיים - מבקש להגדיר
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
@@ -91,7 +114,7 @@ else:
     st.stop()
 
 # ==========================================
-# הפרומפט המלא והקליני (ללא קיצורים!) 📜
+# הפרומפט המלא והקליני 📜
 # ==========================================
 SYSTEM_PROMPT = """
 **אזהרה אתית קלינית (חובה פנימית):** הנח כי כל משתמש עלול להיות רגיש להפרעות אכילה (ED). עקרון העל שלך הוא **Primum Non Nocere (קודם כל, אל תגרום נזק)**. אתה פועל תחת סביבת סיכון גבוהה.
