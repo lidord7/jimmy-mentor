@@ -11,65 +11,43 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- עיצוב CSS (יישור לימין + תיקון רשימות) ---
+# --- עיצוב CSS ---
 st.markdown("""
 <style>
-    /* כיוון כללי */
-    .stApp {
-        direction: rtl;
-        text-align: right;
-    }
-    
-    /* יישור טקסטים */
-    p, div, h1, h2, h3, h4, h5, h6, span {
-        text-align: right !important;
-        direction: rtl !important;
-    }
-    
-    /* יישור רשימות */
-    ul, ol {
-        direction: rtl !important;
-        text-align: right !important;
-        margin-right: 1.5rem !important;
-        margin-left: 0 !important;
-        padding-right: 0 !important;
-    }
-    
-    li {
-        text-align: right !important;
-        direction: rtl !important;
-    }
-    
-    /* בועות הצ'אט */
-    .stChatMessage {
-        direction: rtl !important;
-        text-align: right !important;
-    }
-    
-    /* שורת הכתיבה */
-    .stChatInput {
-        direction: rtl;
-    }
-    .stChatInput textarea {
-        direction: rtl;
-        text-align: right;
-    }
+    .stApp { direction: rtl; text-align: right; }
+    p, div, h1, h2, h3, h4, h5, h6, span { text-align: right !important; direction: rtl !important; }
+    ul, ol { direction: rtl !important; text-align: right !important; margin-right: 1.5rem !important; }
+    li { text-align: right !important; direction: rtl !important; }
+    .stChatMessage { direction: rtl !important; text-align: right !important; }
+    .stChatInput { direction: rtl; }
+    .stChatInput textarea { direction: rtl; text-align: right; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- כותרת ---
 st.title("🥗 ג'ימי - יועץ התזונה שלך")
 st.caption("עושים סדר בתזונה ובבריאות – פשוט, טעים ובלי שיפוטיות.")
 
 # ==========================================
-# חיבור לזיכרון (Google Sheets) 🧠
+# חיבור לזיכרון (תומך גם במחשב וגם בענן) 🧠
 # ==========================================
 @st.cache_resource
 def connect_to_sheets():
-    # מוודא שקובץ credentials.json נמצא באותה תיקייה
+    scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
+             "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+    
+    # ניסיון 1: קריאה מהכספת של Streamlit (עבור הענן)
+    if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
+        try:
+            creds_dict = st.secrets["connections"]["gsheets"]
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+            client = gspread.authorize(creds)
+            return client.open("data base Jimmy").sheet1
+        except Exception as e:
+            st.error(f"שגיאה בחיבור לכספת: {e}")
+            return None
+
+    # ניסיון 2: קריאה מקובץ מקומי (עבור המחשב בבית)
     try:
-        scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
-                 "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
         creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
         client = gspread.authorize(creds)
         return client.open("data base Jimmy").sheet1
@@ -79,48 +57,41 @@ def connect_to_sheets():
 sheet = connect_to_sheets()
 
 if not sheet:
-    st.error("שגיאה: לא הצלחתי להתחבר לקובץ הנתונים. וודא ש-credentials.json נמצא בתיקייה.")
+    st.error("שגיאה: לא הצלחתי להתחבר לנתונים. אם אתה בענן - בדוק את ה-Secrets. אם אתה במחשב - בדוק את credentials.json.")
     st.stop()
 
-# --- זיהוי המשתמש בצד (כדי שנדע את מי לזכור) ---
+# --- זיהוי משתמש ---
 with st.sidebar:
-    st.header("התחברות לג'ימי")
-    user_name = st.text_input("הכנס את שמך המלא:", value="אורח")
-    st.info("💡 ג'ימי זוכר את השיחות הקודמות שלך לפי השם הזה.")
+    st.header("התחברות")
+    user_name = st.text_input("הכנס את שמך:", value="אורח")
+    st.info("💡 ג'ימי זוכר אותך לפי השם הזה.")
 
-# --- פונקציה לשליפת היסטוריה ---
+# --- פונקציית זיכרון ---
 def get_memory(user_name):
     try:
         all_rows = sheet.get_all_records()
         memory_string = ""
-        # מסנן רק את השורות של המשתמש הנוכחי
         relevant_rows = [row for row in all_rows if row.get('User_Name') == user_name]
-        
-        # לוקח את ה-30 הודעות האחרונות (כדי שיהיה הקשר רחב)
+        # לוקח את 30 ההודעות האחרונות
         for row in relevant_rows[-30:]:
-            role = row.get('Role', '')
-            msg = row.get('Message', '')
-            memory_string += f"{role}: {msg}\n"
+            role = row.get('Role')
+            msg = row.get('Message')
+            if role and msg:
+                memory_string += f"{role}: {msg}\n"
         return memory_string
     except:
         return ""
 
-# --- הגדרת המפתח ---
-# *** אם אתה מריץ מקומית ואין לך קובץ secrets, אתה יכול להחליף את השורה למטה במפתח שלך במרכאות ***
-# לדוגמה: api_key = "AIzaSy....."
-try:
-    if "GOOGLE_API_KEY" in st.secrets:
-        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    else:
-        # אופציה להדביק כאן ידנית אם ה-secrets לא עובד
-        # genai.configure(api_key="כאן-תדביק-את-המפתח-שלך")
-        st.error("חסר מפתח API. נא להגדיר אותו ב-Streamlit Secrets או בקוד.")
-        st.stop()
-except:
-    st.warning("הערה: המערכת מחפשת את המפתח ב-secrets. אם זה לא עובד, ערוך את הקוד ידנית.")
+# --- חיבור ל-Gemini ---
+# מנסה למשוך מ-Secrets, אם לא קיים - מבקש להגדיר
+if "GOOGLE_API_KEY" in st.secrets:
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+else:
+    st.error("חסר מפתח API. נא להגדיר GOOGLE_API_KEY ב-Secrets.")
+    st.stop()
 
 # ==========================================
-# הפרומפט המלא והסופי (בדיוק כפי שביקשת) 📜
+# הפרומפט המלא והקליני (ללא קיצורים!) 📜
 # ==========================================
 SYSTEM_PROMPT = """
 **אזהרה אתית קלינית (חובה פנימית):** הנח כי כל משתמש עלול להיות רגיש להפרעות אכילה (ED). עקרון העל שלך הוא **Primum Non Nocere (קודם כל, אל תגרום נזק)**. אתה פועל תחת סביבת סיכון גבוהה.
@@ -188,33 +159,25 @@ SYSTEM_PROMPT = """
 * **ניהול נפילות:** טיפול בנפילה **רק בדיווח יזום**. קבלה כחלק מהתהליך, ללא שיפוטיות.
 """
 
-# --- אתחול המודל ---
 if "chat_session" not in st.session_state:
-    # משתמשים במודל המהיר והחכם 2.5 Flash
     model = genai.GenerativeModel('gemini-2.5-flash')
     st.session_state.chat_session = model 
 
-# --- היסטוריית UI ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- הצגת היסטוריית הצ'אט ---
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- אזור הקלט והלוגיקה הראשית ---
 if prompt := st.chat_input("כתוב לג'ימי..."):
-    
-    # 1. הצגת הודעת המשתמש
     st.chat_message("user").markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # 2. שליפת הזיכרון מהשיטס 🧠
+    # שליפת הזיכרון
     history_from_db = get_memory(user_name)
-
-    # 3. בניית הפרומפט המאוחד
-    # כאן אנחנו משלבים את הפרומפט הגדול + הזיכרון + השאלה החדשה
+    
+    # הרכבת השאלה המלאה
     final_prompt = f"""
     {SYSTEM_PROMPT}
     
@@ -225,21 +188,18 @@ if prompt := st.chat_input("כתוב לג'ימי..."):
     הודעה חדשה מהמשתמש: {prompt}
     """
 
-    # 4. שליחה לג'ימי וקבלת תשובה
     try:
         response = st.session_state.chat_session.generate_content(final_prompt)
         answer_text = response.text
         
-        # 5. הצגת התשובה של ג'ימי
         with st.chat_message("assistant"):
             st.markdown(answer_text)
-        
         st.session_state.messages.append({"role": "assistant", "content": answer_text})
         
-        # 6. שמירה לזיכרון (Google Sheets) 💾
+        # שמירה לזיכרון
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sheet.append_row([timestamp, user_name, "User", prompt])
         sheet.append_row([timestamp, user_name, "Jimmy", answer_text])
 
     except Exception as e:
-        st.error(f"אופס, קרתה שגיאה: {e}")
+        st.error(f"שגיאה: {e}")
